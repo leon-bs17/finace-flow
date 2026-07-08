@@ -1,0 +1,207 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { TrendingUp, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+
+export default function RegisterPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const tokenRes = await api.post<{ access_token: string }>("/auth/register", { name, email, password });
+      const userRes = await api.get<any>("/auth/me", tokenRes.access_token);
+      login(tokenRes.access_token, userRes);
+    } catch (err: any) {
+      setError(err.message || "Erro ao criar conta");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-canvas flex">
+      {/* Painel esquerdo — formulário */}
+      <div className="flex flex-1 flex-col items-center justify-center p-8 lg:p-16">
+        <div className="w-full max-w-sm flex flex-col gap-8">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-moss-500 shadow-sm">
+              <TrendingUp className="h-5 w-5 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="font-display font-semibold text-ink text-lg tracking-tight">
+              FinanceFlow
+            </span>
+          </div>
+
+          {/* Título */}
+          <div>
+            <h1 className="font-display text-2xl font-bold text-ink">Criar sua conta</h1>
+            <p className="text-sm text-ink-muted mt-1.5">
+              Comece a gerenciar suas finanças com IA em minutos.
+            </p>
+          </div>
+
+          {/* Formulário */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {error && (
+              <div className="p-3 bg-rose-500/10 text-rose-500 text-sm rounded-lg border border-rose-500/20">
+                {error}
+              </div>
+            )}
+            <Input
+              label="Nome Completo"
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Seu nome"
+              leftElement={<User className="h-4 w-4" />}
+              required
+              autoComplete="name"
+            />
+            <Input
+              label="E-mail"
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              leftElement={<Mail className="h-4 w-4" />}
+              required
+              autoComplete="email"
+            />
+            <Input
+              label="Senha"
+              type={showPassword ? "text" : "password"}
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              leftElement={<Lock className="h-4 w-4" />}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="pointer-events-auto text-ink-muted hover:text-ink transition-colors"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              }
+              required
+              autoComplete="new-password"
+            />
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={loading}
+              className="w-full mt-2"
+            >
+              Criar conta
+            </Button>
+          </form>
+
+          {/* Divider OAuth */}
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-ink-muted bg-canvas px-1">ou continue com</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          {/* OAuth buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="outline" size="md" className="w-full">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
+              </svg>
+              Google
+            </Button>
+            <Button variant="outline" size="md" className="w-full">
+              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              GitHub
+            </Button>
+          </div>
+
+          {/* Link de login */}
+          <p className="text-center text-sm text-ink-muted">
+            Já tem uma conta?{" "}
+            <Link href="/login" className="text-moss-400 hover:text-moss-500 font-medium transition-colors">
+              Fazer login
+            </Link>
+          </p>
+        </div>
+      </div>
+
+      {/* Painel direito — visual (oculto em mobile) */}
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-surface border-l border-border relative overflow-hidden">
+        {/* Fundo decorativo */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-moss-500/10 blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-amber-400/5 blur-2xl" />
+        </div>
+        {/* Conteúdo */}
+        <div className="relative flex flex-col items-center text-center gap-6 px-16">
+          <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
+            {[
+              { label: "Saldo total", value: "R$ 12.480", color: "text-moss-400" },
+              { label: "Economia", value: "R$ 2.900", color: "text-moss-400" },
+              { label: "Score", value: "72/100", color: "text-amber-400" },
+              { label: "Metas ativas", value: "4", color: "text-ink" },
+            ].map((card) => (
+              <div
+                key={card.label}
+                className="rounded-xl border border-border bg-elevated p-3 text-left"
+              >
+                <p className="text-xs text-ink-muted">{card.label}</p>
+                <p className={`text-lg font-bold ${card.color} figure tabular-nums mt-0.5`}>
+                  {card.value}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-bold text-ink">
+              Controle absoluto sem planilhas.
+            </h2>
+            <p className="text-sm text-ink-muted mt-2 max-w-xs">
+              Deixe a inteligência artificial do FinanceFlow cuidar da parte chata enquanto você foca no que importa.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
