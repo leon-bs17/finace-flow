@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocale } from "@/contexts/LocaleContext";
 
 interface NavItem {
   label: string;
@@ -28,18 +29,6 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
 }
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "Painel", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Transações", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Assinaturas", href: "/subscriptions", icon: CreditCard },
-  { label: "Metas", href: "/goals", icon: Target },
-  { label: "Assistente IA", href: "/chat", icon: MessageSquare, badge: "IA" },
-];
-
-const BOTTOM_ITEMS: NavItem[] = [
-  { label: "Configurações", href: "/settings", icon: Settings },
-];
 
 interface SidebarProps {
   className?: string;
@@ -49,7 +38,20 @@ interface SidebarProps {
 export function Sidebar({ className, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { t } = useLocale();
   const initials = user?.name?.charAt(0)?.toUpperCase() ?? "U";
+
+  const NAV_ITEMS: NavItem[] = [
+    { label: t("nav.dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { label: t("nav.transactions"), href: "/transactions", icon: ArrowLeftRight },
+    { label: t("nav.subscriptions"), href: "/subscriptions", icon: CreditCard },
+    { label: t("nav.goals"), href: "/goals", icon: Target },
+    { label: t("nav.chat"), href: "/chat", icon: MessageSquare, badge: "AI" },
+  ];
+
+  const BOTTOM_ITEMS: NavItem[] = [
+    { label: t("nav.settings"), href: "/settings", icon: Settings },
+  ];
 
   return (
     <aside
@@ -105,10 +107,10 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                 "text-ink-muted transition-colors duration-150",
                 "hover:bg-elevated hover:text-rose-400"
               )}
-              aria-label="Sair"
+              aria-label="Logout"
             >
               <LogOut className="h-4 w-4 shrink-0" />
-              <span>Sair</span>
+              <span>{t("action.logout") ?? "Sair"}</span>
             </button>
           </li>
         </ul>

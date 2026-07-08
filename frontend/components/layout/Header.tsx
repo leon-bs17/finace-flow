@@ -10,15 +10,8 @@ import { Sun, Moon, Bell, Menu, X, Search, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { useLocale } from "@/contexts/LocaleContext";
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Painel",
-  "/transactions": "Transações",
-  "/subscriptions": "Assinaturas",
-  "/goals": "Metas",
-  "/chat": "Assistente IA",
-  "/settings": "Configurações",
-};
 
 interface HeaderProps {
   className?: string;
@@ -26,13 +19,24 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const pathname = usePathname();
+  const { t } = useLocale();
   const [isDark, setIsDark] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const title =
-    PAGE_TITLES[pathname] ??
-    Object.entries(PAGE_TITLES).find(([key]) => pathname.startsWith(key))?.[1] ??
-    "FinanceFlow";
+  const PAGE_TITLE_KEYS: Record<string, string> = {
+    "/dashboard": "nav.dashboard",
+    "/transactions": "nav.transactions",
+    "/subscriptions": "nav.subscriptions",
+    "/goals": "nav.goals",
+    "/chat": "nav.chat",
+    "/settings": "nav.settings",
+  };
+
+  const titleKey =
+    PAGE_TITLE_KEYS[pathname] ??
+    Object.entries(PAGE_TITLE_KEYS).find(([key]) => pathname.startsWith(key))?.[1];
+
+  const title = titleKey ? t(titleKey) : "FinanceFlow";
 
   // Sincroniza o tema com localStorage e html.light
   useEffect(() => {

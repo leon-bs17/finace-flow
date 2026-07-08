@@ -25,9 +25,11 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     "dashboard.upcomingBills": "Contas a vencer",
     "action.uploadStatement": "Importar extrato",
     "action.askAssistant": "Perguntar ao assistente",
+    "action.logout": "Sair",
+    "settings.language": "Idioma",
+    "settings.languageCurrency": "Idioma e Moeda",
   },
   en: {
-    // TODO: preencher traduções em inglês
     "nav.dashboard": "Dashboard",
     "nav.transactions": "Transactions",
     "nav.subscriptions": "Subscriptions",
@@ -45,6 +47,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     "dashboard.upcomingBills": "Upcoming bills",
     "action.uploadStatement": "Import statement",
     "action.askAssistant": "Ask the assistant",
+    "action.logout": "Log out",
+    "settings.language": "Language",
+    "settings.languageCurrency": "Language & Currency",
   },
 };
 

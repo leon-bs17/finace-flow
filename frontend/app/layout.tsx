@@ -23,20 +23,21 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "FinanceFlow — Finanças pessoais com IA",
+    default: "FinanceFlow — Personal Finance with AI",
     template: "%s | FinanceFlow",
   },
   description:
-    "Gerencie suas finanças sem planilhas. A IA categoriza, analisa e gera insights automaticamente.",
-  keywords: ["finanças pessoais", "controle financeiro", "IA", "orçamento", "investimentos"],
+    "Manage your finances without spreadsheets. AI categorizes, analyzes and generates insights automatically.",
+  keywords: ["personal finance", "financial control", "AI", "budget", "investments", "finanças pessoais"],
   authors: [{ name: "FinanceFlow" }],
   creator: "FinanceFlow",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    title: "FinanceFlow — Finanças pessoais com IA",
-    description: "Gerencie suas finanças sem planilhas.",
+    alternateLocale: ["en_US"],
+    title: "FinanceFlow — Personal Finance with AI",
+    description: "Manage your finances without spreadsheets.",
     siteName: "FinanceFlow",
   },
 };
@@ -51,6 +52,7 @@ export const viewport: Viewport = {
 };
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LocaleProvider } from "@/contexts/LocaleContext";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -59,9 +61,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${inter.variable} ${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased`}
       >
         <ThemeScript />
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <LocaleProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </LocaleProvider>
       </body>
     </html>
   );
