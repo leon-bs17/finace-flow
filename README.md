@@ -21,6 +21,7 @@ OpenAI, provedor OAuth, bucket de storage) estão isolados atrás de interfaces
 | Auth         | JWT próprio + OAuth (Google) |
 | IA           | OpenAI-compatible API (categorização, insights, chat) |
 | OCR          | pytesseract + pdfplumber para extratos em PDF |
+| i18n         | PT-BR e EN — troca em tempo real via Settings |
 | Deploy       | Vercel (frontend) · Railway (backend) |
 
 ## Estrutura
@@ -34,10 +35,11 @@ financeflow/
 │       ├── schemas/        # Pydantic (request/response)
 │       ├── api/v1/         # rotas HTTP
 │       └── services/       # regras de negócio e integração com IA/OCR
-└── frontend/                # Next.js
+└── frontend/               # Next.js
     ├── app/                # rotas (App Router), grupos (auth) e (dashboard)
     ├── components/         # UI (shadcn + componentes de dashboard)
-    └── lib/                # client de API, utils
+    ├── contexts/           # AuthContext + LocaleContext (i18n)
+    └── lib/                # client de API, utils, dicionários i18n
 ```
 
 ## Como rodar localmente
@@ -48,7 +50,7 @@ Usando o script automatizado (PowerShell no Windows):
 .\start-dev.ps1
 ```
 
-Manualmente (Qualquer sistema):
+Manualmente (qualquer sistema):
 
 ```bash
 # 1. Copiar as variáveis de ambiente
@@ -90,7 +92,7 @@ npm run dev
 | Forecast de saldo | ✅ modelo simples de projeção linear + sazonalidade |
 | Dashboard (UI) | ✅ completo, com dados mockados quando a API não responde |
 | Dark/Light mode | ✅ |
-| i18n (PT-BR/EN) | 🔧 estrutura pronta, hoje só PT-BR está preenchido (ver `lib/i18n.ts`) |
+| i18n (PT-BR / EN) | ✅ funcional — troca via Configurações → Idioma |
 
 Este é um ponto de partida sólido, não um produto pronto para produção sem
 revisão: antes de ir ao ar, revise políticas de segurança, LGPD/GDPR para
