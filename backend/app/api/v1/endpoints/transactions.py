@@ -7,7 +7,7 @@ from app.core.deps import get_current_user
 from app.models.category import Category
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.schemas.transaction import TransactionCreate, TransactionResponse, TransactionUpdateCategory, TransactionUpdate
+from app.schemas.transaction import TransactionCreate, TransactionResponse, TransactionUpdateCategory, TransactionUpdate, CategoryResponse
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -16,6 +16,12 @@ def _to_response(txn: Transaction) -> TransactionResponse:
     data = TransactionResponse.model_validate(txn)
     data.category_name = txn.category.name if txn.category else None
     return data
+
+
+@router.get("/categories", response_model=list[CategoryResponse])
+def list_categories(db: Session = Depends(get_db)):
+    categories = db.query(Category).order_by(Category.name).all()
+    return categories
 
 
 @router.get("", response_model=list[TransactionResponse])

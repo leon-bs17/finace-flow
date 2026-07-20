@@ -115,19 +115,26 @@ def _parse_pdf_via_ocr(file_bytes: bytes) -> list[ParsedTransaction]:
     Implementação de referência: rasteriza cada página e roda OCR, depois
     aplica o mesmo parser de linha usado nas tabelas de texto.
     """
-    import pytesseract
-    from pdf2image import convert_from_bytes  # requer poppler-utils no sistema
+    try:
+        import pytesseract
+        from pdf2image import convert_from_bytes  # requer poppler-utils no sistema
 
-    results: list[ParsedTransaction] = []
-    pages = convert_from_bytes(file_bytes)
-    for page_image in pages:
-        text = pytesseract.image_to_string(page_image, lang="por")
-        for line in text.splitlines():
-            columns = [c for c in line.split("  ") if c.strip()]
-            parsed = _try_parse_table_row(columns)
-            if parsed:
-                results.append(parsed)
-    return results
+        results: list[ParsedTransaction] = []
+        pages = convert_from_bytes(file_bytes)
+        for page_image in pages:
+            text = pytesseract.image_to_string(page_image, lang="por")
+            for line in text.splitlines():
+                columns = [c for c in line.split("  ") if c.strip()]
+                parsed = _try_parse_table_row(columns)
+                if parsed:
+                    results.append(parsed)
+        return results
+    except ImportError:
+        print("[AVISO] Dependências de OCR (pytesseract, pdf2image) não instaladas.")
+        return []
+    except Exception as e:
+        print(f"[ERRO OCR] Falha ao processar PDF via OCR: {e}")
+        return []
 
 
 def parse_statement(file_bytes: bytes, filename: str) -> list[ParsedTransaction]:

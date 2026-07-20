@@ -23,11 +23,22 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
+from app.models.category import Category, DEFAULT_CATEGORIES
+from sqlalchemy.orm import Session
+from app.core.database import SessionLocal
+
 @app.on_event("startup")
 def on_startup() -> None:
     # Em produção use migrations (Alembic); create_all fica só para dev rápido.
     if settings.ENVIRONMENT == "development":
         Base.metadata.create_all(bind=engine)
+        
+        # Seed default categories if database is empty
+        with SessionLocal() as db:
+            if db.query(Category).count() == 0:
+                for name, icon, color, kind in DEFAULT_CATEGORIES:
+                    db.add(Category(name=name, kind=kind, icon=icon, color=color))
+                db.commit()
 
 
 @app.get("/health", tags=["health"])

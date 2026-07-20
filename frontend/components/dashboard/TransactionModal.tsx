@@ -19,8 +19,25 @@ export function TransactionModal({ isOpen, onClose, onSuccess, transaction }: Tr
   const [merchant, setMerchant] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { token, user } = useAuth();
+
+  useEffect(() => {
+    async function loadCategories() {
+      if (!token) return;
+      try {
+        const data = await api.get("/transactions/categories", token);
+        setCategories(data);
+      } catch (err) {
+        console.error("Erro ao carregar categorias", err);
+      }
+    }
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [token, isOpen]);
 
   useEffect(() => {
     if (transaction) {
@@ -28,11 +45,13 @@ export function TransactionModal({ isOpen, onClose, onSuccess, transaction }: Tr
       setMerchant(transaction.merchant || "");
       setAmount(Math.abs(transaction.amount).toString());
       setDate(transaction.date || "");
+      setCategoryId(transaction.category_id || "");
     } else {
       setDescription("");
       setMerchant("");
       setAmount("");
       setDate(new Date().toISOString().split("T")[0]);
+      setCategoryId("");
     }
   }, [transaction, isOpen]);
 
@@ -51,6 +70,7 @@ export function TransactionModal({ isOpen, onClose, onSuccess, transaction }: Tr
         merchant: merchant || description,
         amount: finalAmount,
         date,
+        category_id: categoryId || null,
       };
 
       if (transaction) {
@@ -108,6 +128,19 @@ export function TransactionModal({ isOpen, onClose, onSuccess, transaction }: Tr
             value={merchant}
             onChange={(e) => setMerchant(e.target.value)}
           />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-ink leading-none">Categoria</label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full h-10 rounded-xl border bg-surface text-ink text-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-moss-500/50 focus:border-moss-500 border-border px-3"
+            >
+              <option value="">Sem categoria</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <Input 
               label="Valor (R$)" 

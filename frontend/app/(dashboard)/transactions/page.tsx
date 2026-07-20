@@ -10,18 +10,36 @@ import { formatCurrency } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { TransactionModal } from "@/components/dashboard/TransactionModal";
+import { UploadModal } from "@/components/dashboard/UploadModal";
 
-const CATEGORIES = ["Todas", "Alimentação", "Transporte", "Moradia", "Assinaturas", "Saúde", "Salário"];
+
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
   const { token } = useAuth();
+
+  useEffect(() => {
+    if (token) {
+      api.get<any[]>("/transactions/categories", token).then(setCategories).catch(console.error);
+    }
+  }, [token]);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await api.get<any[]>("/transactions", token || undefined);
+        setLoading(true);
+        let url = "/transactions";
+        const params = new URLSearchParams();
+        if (search) params.append("search", search);
+        if (selectedCategory) params.append("category_id", selectedCategory);
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const data = await api.get<any[]>(url, token || undefined);
         setTransactions(data);
       } catch (err) {
         console.error(err);
@@ -29,10 +47,14 @@ export default function TransactionsPage() {
         setLoading(false);
       }
     }
-    if (token) load();
-  }, [token]);
+    if (token) {
+      const timer = setTimeout(() => load(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [token, search, selectedCategory, reloadTrigger]);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedTxn, setSelectedTxn] = useState<any>(null);
 
   function handleOpenModal(txn: any = null) {
@@ -41,13 +63,7 @@ export default function TransactionsPage() {
   }
 
   function handleModalSuccess() {
-    // Reload transactions
-    if (!token) return;
-    setLoading(true);
-    api.get<any[]>("/transactions", token).then((data) => {
-      setTransactions(data);
-      setLoading(false);
-    });
+    setReloadTrigger(prev => prev + 1);
   }
 
   return (
@@ -58,10 +74,15 @@ export default function TransactionsPage() {
           placeholder="Buscar por descrição, merchant ou categoria..."
           leftElement={<Search className="h-4 w-4" />}
           className="flex-1"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
         <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="md" leftIcon={<SlidersHorizontal className="h-4 w-4" />}>
             Filtrar
+          </Button>
+          <Button variant="outline" size="md" onClick={() => setUploadModalOpen(true)} leftIcon={<Upload className="h-4 w-4" />}>
+            Importar
           </Button>
           <Button variant="primary" size="md" onClick={() => handleOpenModal()} leftIcon={<ArrowUpRight className="h-4 w-4" />}>
             Nova Transação
@@ -71,16 +92,27 @@ export default function TransactionsPage() {
 
       {/* Filtros de categoria */}
       <div className="flex gap-2 flex-wrap">
-        {CATEGORIES.map((cat, i) => (
+        <button
+          onClick={() => setSelectedCategory(null)}
+          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+            selectedCategory === null
+              ? "bg-moss-500/20 text-moss-400 border border-moss-500/30"
+              : "bg-surface border border-border text-ink-muted hover:text-ink hover:border-border/80"
+          }`}
+        >
+          Todas
+        </button>
+        {categories.map((cat) => (
           <button
-            key={cat}
+            key={cat.id}
+            onClick={() => setSelectedCategory(cat.id)}
             className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-              i === 0
+              selectedCategory === cat.id
                 ? "bg-moss-500/20 text-moss-400 border border-moss-500/30"
                 : "bg-surface border border-border text-ink-muted hover:text-ink hover:border-border/80"
             }`}
           >
-            {cat}
+            {cat.name}
           </button>
         ))}
       </div>
@@ -149,6 +181,14 @@ export default function TransactionsPage() {
         onClose={() => setModalOpen(false)} 
         onSuccess={handleModalSuccess} 
         transaction={selectedTxn} 
+      />
+      <UploadModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onSuccess={(result) => {
+          alert(`Importação concluída: ${result.transactions_imported} inseridas, ${result.duplicates_skipped} duplicadas puladas.`);
+          handleModalSuccess();
+        }}
       />
     </div>
   );

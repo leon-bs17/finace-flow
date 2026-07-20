@@ -19,13 +19,25 @@ async function request<T>(path: string, options: RequestInit = {}, token?: strin
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({ detail: response.statusText }));
-    // Try to auto-logout on 401
+    
+    // Auto-logout em caso de 401
     if (response.status === 401 && typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
-    throw new Error(body.detail ?? "Erro ao comunicar com a API");
+    
+    let errorMessage = "Erro ao comunicar com a API";
+    if (body && body.detail) {
+      if (Array.isArray(body.detail)) {
+        errorMessage = body.detail.map((err: any) => err.msg || JSON.stringify(err)).join(", ");
+      } else if (typeof body.detail === "string") {
+        errorMessage = body.detail;
+      } else {
+        errorMessage = JSON.stringify(body.detail);
+      }
+    }
+    throw new Error(errorMessage);
   }
   return response.json() as Promise<T>;
 }

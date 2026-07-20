@@ -21,10 +21,20 @@ veja o gráfico correspondente no dashboard.
 
 def ask_financial_assistant(question: str, financial_context: dict, history: list[dict] | None = None) -> str:
     if not settings.OPENAI_API_KEY:
-        return (
-            "O assistente de IA ainda não está configurado. Defina OPENAI_API_KEY "
-            "no arquivo .env para ativar respostas em linguagem natural."
-        )
+        q = question.lower()
+        if "saldo" in q:
+            return f"Seu saldo atual é de R$ {financial_context.get('current_balance', 0):.2f}."
+        elif "gasto" in q or "despesa" in q:
+            return f"Suas despesas mensais estão em R$ {financial_context.get('monthly_expenses', 0):.2f}."
+        elif "receita" in q or "ganho" in q:
+            return f"Sua receita mensal é de R$ {financial_context.get('monthly_income', 0):.2f}."
+        elif "saúde" in q or "score" in q:
+            return f"Seu score de saúde financeira é {financial_context.get('financial_health_score', 0)}/100."
+        else:
+            return (
+                "Modo Offline (Sem IA conectada). "
+                "Posso informar seu saldo, despesas, ganhos ou score de saúde financeira com base nos seus dados atuais."
+            )
 
     client = OpenAI(api_key=settings.OPENAI_API_KEY)
     messages = [{"role": "system", "content": f"{SYSTEM_PROMPT}\n\nDados financeiros do usuário:\n{financial_context}"}]

@@ -17,11 +17,16 @@ ALLOWED_EXTENSIONS = (".csv", ".xlsx", ".xls", ".ofx", ".pdf")
 
 @router.post("/statement", response_model=UploadResult)
 async def upload_statement(
-    account_id: str,
     file: UploadFile = File(...),
+    account_id: str | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not account_id:
+        if not current_user.accounts:
+            raise HTTPException(status_code=400, detail="Usuário não possui conta bancária")
+        account_id = current_user.accounts[0].id
+
     if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
         raise HTTPException(status_code=400, detail=f"Formato não suportado. Use: {', '.join(ALLOWED_EXTENSIONS)}")
 

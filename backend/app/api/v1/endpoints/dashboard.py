@@ -10,6 +10,7 @@ from app.models.category import Category
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.schemas.dashboard import CashFlowPoint, CategoryBreakdown, DashboardSummary, Insight, UpcomingBill
+from app.models.subscription import Subscription
 from app.services.forecasting import financial_health_score
 from app.services.insights import CategoryTotals, generate_insights
 
@@ -46,6 +47,18 @@ def get_summary(db: Session = Depends(get_db), current_user: User = Depends(get_
     savings_rate = max(0.0, (income - expenses) / income) if income else 0.0
     score = financial_health_score(savings_rate=savings_rate, on_time_bill_ratio=0.9, budget_adherence=0.8)
 
+    active_subs = db.query(Subscription).filter(Subscription.user_id == current_user.id, Subscription.is_active == True).all()
+    upcoming_bills = []
+    for sub in active_subs:
+        renewal = sub.next_renewal or (today + timedelta(days=15))
+        if renewal >= today:
+            upcoming_bills.append(UpcomingBill(
+                merchant=sub.merchant,
+                amount=float(sub.last_price or sub.monthly_cost),
+                due_date=renewal
+            ))
+    upcoming_bills.sort(key=lambda b: b.due_date)
+
     return DashboardSummary(
         current_balance=balance,
         monthly_income=income,
@@ -54,7 +67,7 @@ def get_summary(db: Session = Depends(get_db), current_user: User = Depends(get_
         financial_health_score=score,
         top_categories=top_categories,
         cash_flow=_last_six_months_cash_flow(db, account_ids),
-        upcoming_bills=[],  # populado quando o serviço de assinaturas roda (ver subscriptions.py)
+        upcoming_bills=upcoming_bills[:5],
     )
 
 
@@ -73,10 +86,26 @@ def get_insights(db: Session = Depends(get_db), current_user: User = Depends(get
         for cat in set(current) | set(previous)
     ]
 
+    active_subs = db.query(Subscription).filter(Subscription.user_id == current_user.id, Subscription.is_active == True).all()
+    unused_subscriptions = []
+    recurring_waste = 0.0
+
+    for sub in active_subs:
+        # Check if there's any transaction for this subscription in the last 45 days
+        last_txn = db.query(Transaction).filter(
+            Transaction.account_id.in_(account_ids),
+            Transaction.description.ilike(f"%{sub.merchant}%"),
+            Transaction.date >= today - timedelta(days=45)
+        ).first()
+        
+        if not last_txn:
+            unused_subscriptions.append(sub.merchant)
+            recurring_waste += float(sub.monthly_cost)
+
     raw_insights = generate_insights(
         category_totals=totals,
-        unused_subscriptions=[],  # ver services/subscription_detector.py para popular de fato
-        recurring_waste=0,
+        unused_subscriptions=unused_subscriptions,
+        recurring_waste=recurring_waste,
         current_total=sum(current.values()),
         historical_average=sum(previous.values()) or 1,
     )

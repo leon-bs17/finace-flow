@@ -1,3 +1,4 @@
+from typing import Optional, List
 from datetime import date
 
 from pydantic import BaseModel
@@ -9,16 +10,16 @@ class DashboardSummary(BaseModel):
     monthly_expenses: float
     monthly_savings: float
     financial_health_score: int  # 0-100
-    top_categories: list["CategoryBreakdown"]
-    cash_flow: list["CashFlowPoint"]
-    upcoming_bills: list["UpcomingBill"]
+    top_categories: List["CategoryBreakdown"]
+    cash_flow: List["CashFlowPoint"]
+    upcoming_bills: List["UpcomingBill"]
 
 
 class CategoryBreakdown(BaseModel):
     category: str
     amount: float
     percentage: float
-    color: str | None = None
+    color: Optional[str] = None
 
 
 class CashFlowPoint(BaseModel):
@@ -37,16 +38,16 @@ class Insight(BaseModel):
     id: str
     message: str
     kind: str  # "warning" | "positive" | "neutral" | "tip"
-    icon: str | None = None
+    icon: Optional[str] = None
 
 
 class GoalResponse(BaseModel):
     id: str
     name: str
-    icon: str | None
+    icon: Optional[str] = None
     target_amount: float
     current_amount: float
-    target_date: date | None
+    target_date: Optional[date] = None
     progress_percentage: float
 
     model_config = {"from_attributes": True}
@@ -54,18 +55,18 @@ class GoalResponse(BaseModel):
 
 class GoalCreate(BaseModel):
     name: str
-    icon: str | None = None
+    icon: Optional[str] = None
     target_amount: float
     current_amount: float = 0
-    target_date: date | None = None
+    target_date: Optional[date] = None
 
 
 class GoalUpdate(BaseModel):
-    name: str | None = None
-    icon: str | None = None
-    target_amount: float | None = None
-    current_amount: float | None = None
-    target_date: date | None = None
+    name: Optional[str] = None
+    icon: Optional[str] = None
+    target_amount: Optional[float] = None
+    current_amount: Optional[float] = None
+    target_date: Optional[date] = None
 
 
 class SubscriptionCreate(BaseModel):
@@ -73,18 +74,19 @@ class SubscriptionCreate(BaseModel):
     monthly_cost: float
     yearly_cost: float
     billing_cycle: str
-    next_renewal: date | None = None
+    next_renewal: Optional[date] = None
     price_increased: bool = False
     is_active: bool = True
 
+
 class SubscriptionUpdate(BaseModel):
-    merchant: str | None = None
-    monthly_cost: float | None = None
-    yearly_cost: float | None = None
-    billing_cycle: str | None = None
-    next_renewal: date | None = None
-    price_increased: bool | None = None
-    is_active: bool | None = None
+    merchant: Optional[str] = None
+    monthly_cost: Optional[float] = None
+    yearly_cost: Optional[float] = None
+    billing_cycle: Optional[str] = None
+    next_renewal: Optional[date] = None
+    price_increased: Optional[bool] = None
+    is_active: Optional[bool] = None
 
 
 class SubscriptionResponse(BaseModel):
@@ -93,7 +95,7 @@ class SubscriptionResponse(BaseModel):
     monthly_cost: float
     yearly_cost: float
     billing_cycle: str
-    next_renewal: date | None
+    next_renewal: Optional[date] = None
     price_increased: bool
     is_active: bool
 
@@ -107,9 +109,9 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: list[ChatMessage] = []
+    history: List[ChatMessage] = []
 
 
 class ChatResponse(BaseModel):
     reply: str
-    chart_data: dict | None = None
+    chart_data: Optional[dict] = None
